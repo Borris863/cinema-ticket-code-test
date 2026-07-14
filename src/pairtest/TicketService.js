@@ -1,8 +1,13 @@
 import TicketPaymentService from '../thirdparty/paymentgateway/TicketPaymentService.js';
 import SeatReservationService from '../thirdparty/seatbooking/SeatReservationService.js';
 
-const ADULT_TICKET_PRICE = 25;
-const ADULT_TICKET_TYPE = 'ADULT';
+const TICKET_PRICES = {
+  ADULT: 25,
+  CHILD: 15,
+  INFANT: 0,
+};
+
+const SEAT_ALLOCATING_TICKET_TYPES = new Set(['ADULT', 'CHILD']);
 
 export default class TicketService {
   #ticketPaymentService;
@@ -38,16 +43,23 @@ export default class TicketService {
   }
 
   #calculateTotalAmount(ticketTypeRequests) {
-    return this.#countAdultTickets(ticketTypeRequests) * ADULT_TICKET_PRICE;
+    return ticketTypeRequests.reduce((total, ticketTypeRequest) => {
+      const ticketType = ticketTypeRequest.getTicketType();
+      const ticketQuantity = ticketTypeRequest.getNoOfTickets();
+
+      return total + (TICKET_PRICES[ticketType] * ticketQuantity);
+    }, 0);
   }
 
   #calculateSeatsToAllocate(ticketTypeRequests) {
-    return this.#countAdultTickets(ticketTypeRequests);
-  }
+    return ticketTypeRequests.reduce((total, ticketTypeRequest) => {
+      const ticketType = ticketTypeRequest.getTicketType();
 
-  #countAdultTickets(ticketTypeRequests) {
-    return ticketTypeRequests
-      .filter(ticketTypeRequest => ticketTypeRequest.getTicketType() === ADULT_TICKET_TYPE)
-      .reduce((total, ticketTypeRequest) => total + ticketTypeRequest.getNoOfTickets(), 0);
+      if (!SEAT_ALLOCATING_TICKET_TYPES.has(ticketType)) {
+        return total;
+      }
+
+      return total + ticketTypeRequest.getNoOfTickets();
+    }, 0);
   }
 }
