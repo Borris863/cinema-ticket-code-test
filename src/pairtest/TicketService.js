@@ -8,7 +8,10 @@ const TICKET_PRICES = {
   INFANT: 0,
 };
 
-const SEAT_ALLOCATING_TICKET_TYPES = new Set(['ADULT', 'CHILD']);
+const ADULT_TICKET_TYPE = 'ADULT';
+const CHILD_TICKET_TYPE = 'CHILD';
+const INFANT_TICKET_TYPE = 'INFANT';
+const SEAT_ALLOCATING_TICKET_TYPES = new Set([ADULT_TICKET_TYPE, CHILD_TICKET_TYPE]);
 const MAX_TICKETS_PER_PURCHASE = 25;
 
 export default class TicketService {
@@ -65,6 +68,10 @@ export default class TicketService {
     if (this.#calculateTicketCount(ticketTypeRequests) > MAX_TICKETS_PER_PURCHASE) {
       throw new InvalidPurchaseException('a maximum of 25 tickets can be purchased at once');
     }
+
+    if (this.#hasChildOrInfantTicketsWithoutAdult(ticketTypeRequests)) {
+      throw new InvalidPurchaseException('child and infant tickets require an adult ticket');
+    }
   }
 
   #calculateTotalAmount(ticketTypeRequests) {
@@ -93,5 +100,19 @@ export default class TicketService {
       (total, ticketTypeRequest) => total + ticketTypeRequest.getNoOfTickets(),
       0,
     );
+  }
+
+  #hasChildOrInfantTicketsWithoutAdult(ticketTypeRequests) {
+    const adultTickets = this.#countTicketsByType(ticketTypeRequests, ADULT_TICKET_TYPE);
+    const childTickets = this.#countTicketsByType(ticketTypeRequests, CHILD_TICKET_TYPE);
+    const infantTickets = this.#countTicketsByType(ticketTypeRequests, INFANT_TICKET_TYPE);
+
+    return adultTickets === 0 && (childTickets > 0 || infantTickets > 0);
+  }
+
+  #countTicketsByType(ticketTypeRequests, ticketType) {
+    return ticketTypeRequests
+      .filter(ticketTypeRequest => ticketTypeRequest.getTicketType() === ticketType)
+      .reduce((total, ticketTypeRequest) => total + ticketTypeRequest.getNoOfTickets(), 0);
   }
 }

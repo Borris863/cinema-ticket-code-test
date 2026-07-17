@@ -99,6 +99,49 @@ test('rejects purchases of more than 25 tickets before payment or seat reservati
   }
 });
 
+test('rejects child or infant ticket purchases without an adult before payment or seat reservation', () => {
+  const invalidTicketRequests = [
+    [new TicketTypeRequest('CHILD', 1)],
+    [new TicketTypeRequest('INFANT', 1)],
+    [
+      new TicketTypeRequest('CHILD', 1),
+      new TicketTypeRequest('INFANT', 1),
+    ],
+  ];
+
+  for (const ticketTypeRequests of invalidTicketRequests) {
+    const { paymentService, seatReservationService, service } = createTicketService();
+
+    assert.throws(
+      () => service.purchaseTickets(1, ...ticketTypeRequests),
+      InvalidPurchaseException,
+    );
+    assert.equal(paymentService.makePayment.mock.callCount(), 0);
+    assert.equal(seatReservationService.reserveSeat.mock.callCount(), 0);
+  }
+});
+
+test('allows child and infant ticket purchases with an adult', () => {
+  const validTicketRequests = [
+    [new TicketTypeRequest('ADULT', 1), new TicketTypeRequest('CHILD', 1)],
+    [new TicketTypeRequest('ADULT', 1), new TicketTypeRequest('INFANT', 1)],
+    [
+      new TicketTypeRequest('ADULT', 1),
+      new TicketTypeRequest('CHILD', 1),
+      new TicketTypeRequest('INFANT', 1),
+    ],
+  ];
+
+  for (const ticketTypeRequests of validTicketRequests) {
+    const { paymentService, seatReservationService, service } = createTicketService();
+
+    service.purchaseTickets(1, ...ticketTypeRequests);
+
+    assert.equal(paymentService.makePayment.mock.callCount(), 1);
+    assert.equal(seatReservationService.reserveSeat.mock.callCount(), 1);
+  }
+});
+
 function createTicketService() {
   const paymentService = {
     makePayment: mock.fn(),
