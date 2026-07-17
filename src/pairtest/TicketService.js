@@ -1,5 +1,6 @@
 import TicketPaymentService from '../thirdparty/paymentgateway/TicketPaymentService.js';
 import SeatReservationService from '../thirdparty/seatbooking/SeatReservationService.js';
+import InvalidPurchaseException from './lib/InvalidPurchaseException.js';
 
 const TICKET_PRICES = {
   ADULT: 25,
@@ -35,11 +36,19 @@ export default class TicketService {
    */
   purchaseTickets(accountId, ...ticketTypeRequests) {
     // throws InvalidPurchaseException
+    this.#validateAccountId(accountId);
+
     const totalAmountToPay = this.#calculateTotalAmount(ticketTypeRequests);
     const totalSeatsToAllocate = this.#calculateSeatsToAllocate(ticketTypeRequests);
 
     this.#ticketPaymentService.makePayment(accountId, totalAmountToPay);
     this.#seatReservationService.reserveSeat(accountId, totalSeatsToAllocate);
+  }
+
+  #validateAccountId(accountId) {
+    if (!Number.isInteger(accountId) || accountId <= 0) {
+      throw new InvalidPurchaseException('accountId must be an integer greater than zero');
+    }
   }
 
   #calculateTotalAmount(ticketTypeRequests) {
