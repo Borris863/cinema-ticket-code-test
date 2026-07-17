@@ -47,6 +47,25 @@ test('rejects invalid account IDs before payment or seat reservation', () => {
   }
 });
 
+test('rejects empty or negative ticket requests before payment or seat reservation', () => {
+  const invalidTicketRequests = [
+    [],
+    [new TicketTypeRequest('ADULT', 0)],
+    [new TicketTypeRequest('ADULT', -1)],
+  ];
+
+  for (const ticketTypeRequests of invalidTicketRequests) {
+    const { paymentService, seatReservationService, service } = createTicketService();
+
+    assert.throws(
+      () => service.purchaseTickets(1, ...ticketTypeRequests),
+      InvalidPurchaseException,
+    );
+    assert.equal(paymentService.makePayment.mock.callCount(), 0);
+    assert.equal(seatReservationService.reserveSeat.mock.callCount(), 0);
+  }
+});
+
 function createTicketService() {
   const paymentService = {
     makePayment: mock.fn(),

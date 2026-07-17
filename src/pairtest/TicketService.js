@@ -37,6 +37,7 @@ export default class TicketService {
   purchaseTickets(accountId, ...ticketTypeRequests) {
     // throws InvalidPurchaseException
     this.#validateAccountId(accountId);
+    this.#validateTicketRequests(ticketTypeRequests);
 
     const totalAmountToPay = this.#calculateTotalAmount(ticketTypeRequests);
     const totalSeatsToAllocate = this.#calculateSeatsToAllocate(ticketTypeRequests);
@@ -48,6 +49,16 @@ export default class TicketService {
   #validateAccountId(accountId) {
     if (!Number.isInteger(accountId) || accountId <= 0) {
       throw new InvalidPurchaseException('accountId must be an integer greater than zero');
+    }
+  }
+
+  #validateTicketRequests(ticketTypeRequests) {
+    if (ticketTypeRequests.length === 0) {
+      throw new InvalidPurchaseException('at least one ticket must be requested');
+    }
+
+    if (ticketTypeRequests.some(ticketTypeRequest => ticketTypeRequest.getNoOfTickets() <= 0)) {
+      throw new InvalidPurchaseException('ticket quantities must be greater than zero');
     }
   }
 
