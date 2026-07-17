@@ -66,6 +66,39 @@ test('rejects empty or negative ticket requests before payment or seat reservati
   }
 });
 
+test('allows a purchase of exactly 25 tickets', () => {
+  const { paymentService, seatReservationService, service } = createTicketService();
+
+  service.purchaseTickets(1, new TicketTypeRequest('ADULT', 25));
+
+  assert.equal(paymentService.makePayment.mock.callCount(), 1);
+  assert.deepEqual(paymentService.makePayment.mock.calls[0].arguments, [1, 625]);
+  assert.equal(seatReservationService.reserveSeat.mock.callCount(), 1);
+  assert.deepEqual(seatReservationService.reserveSeat.mock.calls[0].arguments, [1, 25]);
+});
+
+test('rejects purchases of more than 25 tickets before payment or seat reservation', () => {
+  const invalidTicketRequests = [
+    [new TicketTypeRequest('ADULT', 26)],
+    [
+      new TicketTypeRequest('ADULT', 10),
+      new TicketTypeRequest('CHILD', 10),
+      new TicketTypeRequest('INFANT', 6),
+    ],
+  ];
+
+  for (const ticketTypeRequests of invalidTicketRequests) {
+    const { paymentService, seatReservationService, service } = createTicketService();
+
+    assert.throws(
+      () => service.purchaseTickets(1, ...ticketTypeRequests),
+      InvalidPurchaseException,
+    );
+    assert.equal(paymentService.makePayment.mock.callCount(), 0);
+    assert.equal(seatReservationService.reserveSeat.mock.callCount(), 0);
+  }
+});
+
 function createTicketService() {
   const paymentService = {
     makePayment: mock.fn(),

@@ -9,6 +9,7 @@ const TICKET_PRICES = {
 };
 
 const SEAT_ALLOCATING_TICKET_TYPES = new Set(['ADULT', 'CHILD']);
+const MAX_TICKETS_PER_PURCHASE = 25;
 
 export default class TicketService {
   #ticketPaymentService;
@@ -60,6 +61,10 @@ export default class TicketService {
     if (ticketTypeRequests.some(ticketTypeRequest => ticketTypeRequest.getNoOfTickets() <= 0)) {
       throw new InvalidPurchaseException('ticket quantities must be greater than zero');
     }
+
+    if (this.#calculateTicketCount(ticketTypeRequests) > MAX_TICKETS_PER_PURCHASE) {
+      throw new InvalidPurchaseException('a maximum of 25 tickets can be purchased at once');
+    }
   }
 
   #calculateTotalAmount(ticketTypeRequests) {
@@ -81,5 +86,12 @@ export default class TicketService {
 
       return total + ticketTypeRequest.getNoOfTickets();
     }, 0);
+  }
+
+  #calculateTicketCount(ticketTypeRequests) {
+    return ticketTypeRequests.reduce(
+      (total, ticketTypeRequest) => total + ticketTypeRequest.getNoOfTickets(),
+      0,
+    );
   }
 }
