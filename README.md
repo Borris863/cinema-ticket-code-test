@@ -24,6 +24,12 @@ cp .env.sample .env
 npm test
 ```
 
+## Coverage
+
+```bash
+npm run coverage
+```
+
 ## Lint
 
 ```bash
