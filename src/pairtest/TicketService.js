@@ -72,6 +72,10 @@ export default class TicketService {
     if (this.#hasChildOrInfantTicketsWithoutAdult(ticketTypeRequests)) {
       throw new InvalidPurchaseException('child and infant tickets require an adult ticket');
     }
+
+    if (this.#hasMoreInfantsThanAdults(ticketTypeRequests)) {
+      throw new InvalidPurchaseException('infant tickets cannot exceed adult tickets');
+    }
   }
 
   #calculateTotalAmount(ticketTypeRequests) {
@@ -108,6 +112,13 @@ export default class TicketService {
     const infantTickets = this.#countTicketsByType(ticketTypeRequests, INFANT_TICKET_TYPE);
 
     return adultTickets === 0 && (childTickets > 0 || infantTickets > 0);
+  }
+
+  #hasMoreInfantsThanAdults(ticketTypeRequests) {
+    const adultTickets = this.#countTicketsByType(ticketTypeRequests, ADULT_TICKET_TYPE);
+    const infantTickets = this.#countTicketsByType(ticketTypeRequests, INFANT_TICKET_TYPE);
+
+    return infantTickets > adultTickets;
   }
 
   #countTicketsByType(ticketTypeRequests, ticketType) {
