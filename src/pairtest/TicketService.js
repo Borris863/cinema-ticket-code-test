@@ -37,6 +37,7 @@ export default class TicketService {
    *
    * @param {number} accountId
    * @param {...TicketTypeRequest} ticketTypeRequests
+   * @returns {{totalAmountPaid: number, totalSeatsReserved: number}}
    * @throws {InvalidPurchaseException}
    */
   purchaseTickets(accountId, ...ticketTypeRequests) {
@@ -49,6 +50,11 @@ export default class TicketService {
 
     this.#ticketPaymentService.makePayment(accountId, totalAmountToPay);
     this.#seatReservationService.reserveSeat(accountId, totalSeatsToAllocate);
+
+    return {
+      totalAmountPaid: totalAmountToPay,
+      totalSeatsReserved: totalSeatsToAllocate,
+    };
   }
 
   #validateAccountId(accountId) {
