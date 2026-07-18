@@ -2,17 +2,18 @@ import TicketPaymentService from '../thirdparty/paymentgateway/TicketPaymentServ
 import SeatReservationService from '../thirdparty/seatbooking/SeatReservationService.js';
 import InvalidPurchaseException from './lib/InvalidPurchaseException.js';
 
-const TICKET_PRICES = {
-  ADULT: 25,
-  CHILD: 15,
-  INFANT: 0,
-};
-
 const ADULT_TICKET_TYPE = 'ADULT';
 const CHILD_TICKET_TYPE = 'CHILD';
 const INFANT_TICKET_TYPE = 'INFANT';
+
+const TICKET_PRICES = {
+  [ADULT_TICKET_TYPE]: Number(process.env.CINEMA_ADULT_TICKET_PRICE ?? 25),
+  [CHILD_TICKET_TYPE]: Number(process.env.CINEMA_CHILD_TICKET_PRICE ?? 15),
+  [INFANT_TICKET_TYPE]: Number(process.env.CINEMA_INFANT_TICKET_PRICE ?? 0),
+};
+
 const SEAT_ALLOCATING_TICKET_TYPES = new Set([ADULT_TICKET_TYPE, CHILD_TICKET_TYPE]);
-const MAX_TICKETS_PER_PURCHASE = 25;
+const MAX_TICKETS_PER_PURCHASE = Number(process.env.CINEMA_MAX_TICKETS_PER_PURCHASE ?? 25);
 
 export default class TicketService {
   #ticketPaymentService;
@@ -107,16 +108,31 @@ export default class TicketService {
   }
 
   #hasChildOrInfantTicketsWithoutAdult(ticketTypeRequests) {
-    const adultTickets = this.#countTicketsByType(ticketTypeRequests, ADULT_TICKET_TYPE);
-    const childTickets = this.#countTicketsByType(ticketTypeRequests, CHILD_TICKET_TYPE);
-    const infantTickets = this.#countTicketsByType(ticketTypeRequests, INFANT_TICKET_TYPE);
+    const adultTickets = this.#countTicketsByType(
+      ticketTypeRequests,
+      ADULT_TICKET_TYPE,
+    );
+    const childTickets = this.#countTicketsByType(
+      ticketTypeRequests,
+      CHILD_TICKET_TYPE,
+    );
+    const infantTickets = this.#countTicketsByType(
+      ticketTypeRequests,
+      INFANT_TICKET_TYPE,
+    );
 
     return adultTickets === 0 && (childTickets > 0 || infantTickets > 0);
   }
 
   #hasMoreInfantsThanAdults(ticketTypeRequests) {
-    const adultTickets = this.#countTicketsByType(ticketTypeRequests, ADULT_TICKET_TYPE);
-    const infantTickets = this.#countTicketsByType(ticketTypeRequests, INFANT_TICKET_TYPE);
+    const adultTickets = this.#countTicketsByType(
+      ticketTypeRequests,
+      ADULT_TICKET_TYPE,
+    );
+    const infantTickets = this.#countTicketsByType(
+      ticketTypeRequests,
+      INFANT_TICKET_TYPE,
+    );
 
     return infantTickets > adultTickets;
   }

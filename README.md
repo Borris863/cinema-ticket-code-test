@@ -10,6 +10,14 @@
 npm install
 ```
 
+## Configuration
+
+The default ticket prices and purchase limit can be configured in `.env`.
+
+```bash
+cp .env.sample .env
+```
+
 ## Test
 
 ```bash
